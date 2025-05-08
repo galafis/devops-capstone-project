@@ -140,5 +140,26 @@ class TestAccountService(TestCase):
         response = self.client.put(f"{BASE_URL}/0", json=updated_data) # Assuming 0 is an unlikely ID
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    # More tests will go here for Create (if not fully covered by helper), Delete, List
+    def test_delete_account(self):
+        """It should Delete an existing Account"""
+        # Create an account to delete
+        created_account = self._create_accounts(1)[0]
+        account_id = created_account["id"]
+
+        # Send DELETE request
+        response = self.client.delete(f"{BASE_URL}/{account_id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data, b"") # Ensure body is empty
+
+        # Verify the account is no longer retrievable
+        get_response = self.client.get(f"{BASE_URL}/{account_id}")
+        self.assertEqual(get_response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_account_not_found(self):
+        """It should return 204 even if Account to Delete is not found (idempotency)"""
+        response = self.client.delete(f"{BASE_URL}/0") # Assuming 0 is an unlikely ID
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data, b"") # Ensure body is empty
+
+    # More tests will go here for Create (if not fully covered by helper), List
 

@@ -17,9 +17,6 @@ from service.common import status  # HTTP Status Codes
 app = Flask(__name__)
 
 # Global in-memory store for accounts and a counter for IDs
-# This is a temporary placeholder for a real database and Account model
-# as per the lab's progression (DB and models are usually introduced later).
-# The tests in test_routes.py imply that POST /accounts is used to create data for GET tests.
 IN_MEMORY_ACCOUNTS = {}
 ACCOUNT_ID_COUNTER = 1
 
@@ -42,25 +39,20 @@ def index():
 ######################################################################
 @app.route("/accounts", methods=["POST"])
 def create_accounts():
-    """Creates a new Account.
-    This endpoint will be called by test cases to create data for other tests (e.g., GET /accounts/{id}).
-    It simulates account creation and storage in memory.
-    """
+    """Creates a new Account."""
     global ACCOUNT_ID_COUNTER
     account_data = request.get_json()
-    
-    # Basic validation (can be expanded)
     if not account_data or not isinstance(account_data, dict):
         abort(status.HTTP_400_BAD_REQUEST, "Invalid account data provided")
 
-    # Simulate creating an account with an ID
-    new_account = account_data.copy() # shallow copy
+    new_account = account_data.copy()
     new_account["id"] = ACCOUNT_ID_COUNTER
     IN_MEMORY_ACCOUNTS[ACCOUNT_ID_COUNTER] = new_account
     ACCOUNT_ID_COUNTER += 1
     
+    # Corrected f-string: using single quotes for dictionary key access
     app.logger.info(f"Account with ID [{new_account['id']}] created.")
-    location_url = url_for("get_account_by_id", account_id=new_account["id"], _external=True)
+    location_url = url_for("get_account_by_id", account_id=new_account['id'], _external=True)
     return make_response(
         jsonify(new_account),
         status.HTTP_201_CREATED,
@@ -71,10 +63,8 @@ def create_accounts():
 # READ AN ACCOUNT (GET /accounts/{id})
 ######################################################################
 @app.route("/accounts/<int:account_id>", methods=["GET"])
-def get_account_by_id(account_id): # Renamed to avoid conflict if a list_accounts is added
-    """Reads an Account by its ID.
-    Retrieves an account from the in-memory store.
-    """
+def get_account_by_id(account_id):
+    """Reads an Account by its ID."""
     app.logger.info(f"Request to retrieve account with id: {account_id}")
     account = IN_MEMORY_ACCOUNTS.get(account_id)
     if not account:
@@ -88,9 +78,7 @@ def get_account_by_id(account_id): # Renamed to avoid conflict if a list_account
 ######################################################################
 @app.route("/accounts/<int:account_id>", methods=["PUT"])
 def update_accounts(account_id):
-    """Updates an Account by its ID.
-    Replaces an existing account in the in-memory store with new data.
-    """
+    """Updates an Account by its ID."""
     app.logger.info(f"Request to update account with id: {account_id}")
     account = IN_MEMORY_ACCOUNTS.get(account_id)
     if not account:
@@ -100,29 +88,35 @@ def update_accounts(account_id):
     if not updated_data or not isinstance(updated_data, dict):
         abort(status.HTTP_400_BAD_REQUEST, "Invalid account data provided for update")
 
-    # Update the account in memory (ensure ID remains the same)
-    updated_data["id"] = account_id # Preserve the original ID
+    updated_data["id"] = account_id
     IN_MEMORY_ACCOUNTS[account_id] = updated_data
     
-    app.logger.info(f"Account with ID [{account_id}] updated.")
+    # Corrected f-string: using single quotes for dictionary key access
+    app.logger.info(f"Account with ID [{updated_data['id']}] updated.")
     return make_response(jsonify(updated_data), status.HTTP_200_OK)
 
+######################################################################
+# DELETE AN ACCOUNT (DELETE /accounts/{id})
+######################################################################
+@app.route("/accounts/<int:account_id>", methods=["DELETE"])
+def delete_accounts(account_id):
+    """Deletes an Account by its ID."""
+    app.logger.info(f"Request to delete account with id: {account_id}")
+    if account_id in IN_MEMORY_ACCOUNTS:
+        del IN_MEMORY_ACCOUNTS[account_id]
+        app.logger.info(f"Account with ID [{account_id}] deleted.")
+    # Per HTTP guidelines, DELETE is idempotent. 
+    # So, if the account doesn_t exist, we still return 204.
+    return make_response("", status.HTTP_204_NO_CONTENT)
 
-# ######################################################################
-# #  U T I L I T Y   F U N C T I O N S
-# ######################################################################
 
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
 def init_db():
-    """ Initializes the SQLAlchemy app or in-memory store """
-    # For now, we clear the in-memory store if this were to be used for reset
+    """ Initializes the in-memory store """
     global IN_MEMORY_ACCOUNTS, ACCOUNT_ID_COUNTER
     IN_MEMORY_ACCOUNTS = {}
     ACCOUNT_ID_COUNTER = 1
     app.logger.info("In-memory database initialized.")
-
-# Import the routes After the Flask app is created
-# pylint: disable=wrong-import-position, cyclic-import
-# from service import routes # noqa: F401 E402 # This was causing a circular import if routes.py imports itself.
-# Models would typically be imported here if they existed
-# from service import models # noqa: F401 E402
 
