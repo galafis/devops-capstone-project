@@ -10,6 +10,7 @@ from unittest import TestCase
 # from unittest.mock import MagicMock, patch # If we need to mock later
 from service import app
 from service.common import status  # HTTP Status Codes
+from service.routes import init_db # Import init_db directly
 # from service.models import db, Account, init_db # Assuming models will be here
 
 # DATABASE_URI = os.getenv(
@@ -42,6 +43,8 @@ class TestAccountService(TestCase):
         self.client = app.test_client()
         # db.session.query(Account).delete()  # clean up the last tests
         # db.session.commit()
+        # Initialize the in-memory store for each test to ensure isolation
+        init_db()
 
     def tearDown(self):
         """Runs after each test"""
@@ -55,11 +58,14 @@ class TestAccountService(TestCase):
     def _create_accounts(self, count):
         """Factory method to create accounts in bulk"""
         accounts = []
-        for _ in range(count):
-            # For now, we assume the create endpoint works or we mock account creation
-            # This is a placeholder as the actual account structure is not defined yet
-            # The lab implies using POST /accounts to create test data.
-            test_account_data = {"name": "Test User", "email": f"test{_}@example.com", "address": "123 Main St"} 
+        for i in range(count):
+            test_account_data = {
+                "name": f"Test User {i}", 
+                "email": f"test{i}@example.com", 
+                "address": f"{i} Main St",
+                "phone_number": f"123-456-78{i:02d}",
+                "date_joined": "2023-01-15T10:00:00Z" # Example date
+            } 
             response = self.client.post(BASE_URL, json=test_account_data)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED, "Could not create test Account")
             new_account = response.get_json()
@@ -80,32 +86,59 @@ class TestAccountService(TestCase):
     def test_get_account(self):
         """It should Read a single Account"""
         # Create an account to read
-        # For now, let's assume _create_accounts(1) works by calling POST /accounts
-        # We'll need to define what an account looks like and how it's created.
-        # The lab states: "The function and route to create an account are already provided in the sample code"
-        # So, we should be able to use self.client.post() to create an account.
-        
-        # Placeholder for account data, adapt when Account model is clear
-        sample_account_data = {"name": "John Doe", "email": "john.doe@example.com", "address": "123 Test St", "phone_number": "123-456-7890"}
-        
-        # Create the account using the POST endpoint
-        post_response = self.client.post(BASE_URL, json=sample_account_data)
-        self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
-        created_account_data = post_response.get_json()
-        account_id = created_account_data["id"] # Assuming the POST response includes an 'id'
+        created_account = self._create_accounts(1)[0]
+        account_id = created_account["id"]
 
         # Retrieve the account
         response = self.client.get(f"{BASE_URL}/{account_id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         retrieved_account_data = response.get_json()
-        self.assertEqual(retrieved_account_data["name"], sample_account_data["name"])
-        self.assertEqual(retrieved_account_data["email"], sample_account_data["email"])
-        # Add more assertions as needed for other fields
+        self.assertEqual(retrieved_account_data["name"], created_account["name"])
+        self.assertEqual(retrieved_account_data["email"], created_account["email"])
 
     def test_get_account_not_found(self):
         """It should not Read an Account that is not found"""
-        response = self.client.get(f"{BASE_URL}/0") # Assuming 0 is an unlikely ID
+        response = self.client.get(f"{BASE_URL}/0") # Assuming 0 is an unlikely ID for a created account
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    # More tests will go here for Create, Update, Delete, List
+    def test_update_account(self):
+        """It should Update an existing Account"""
+        # Create an account to update
+        created_account = self._create_accounts(1)[0]
+        account_id = created_account["id"]
+
+        # Define new data for the account
+        updated_data = {
+            "name": "Updated Test User", 
+            "email": "updated_test@example.com", 
+            "address": "456 New St",
+            "phone_number": "987-654-3210",
+            "date_joined": created_account["date_joined"] # Keep original join date or update if needed
+        }
+
+        # Send PUT request to update the account
+        response = self.client.put(f"{BASE_URL}/{account_id}", json=updated_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_account_data = response.get_json()
+
+        # Verify the returned data matches the updated data
+        self.assertEqual(returned_account_data["name"], updated_data["name"])
+        self.assertEqual(returned_account_data["email"], updated_data["email"])
+        self.assertEqual(returned_account_data["address"], updated_data["address"])
+        self.assertEqual(returned_account_data["phone_number"], updated_data["phone_number"])
+
+        # Optionally, verify by GETting the account again
+        get_response = self.client.get(f"{BASE_URL}/{account_id}")
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        fetched_account_data = get_response.get_json()
+        self.assertEqual(fetched_account_data["name"], updated_data["name"])
+        self.assertEqual(fetched_account_data["email"], updated_data["email"])
+
+    def test_update_account_not_found(self):
+        """It should not Update an Account that is not found"""
+        updated_data = {"name": "Non Existent User", "email": "nonexistent@example.com"}
+        response = self.client.put(f"{BASE_URL}/0", json=updated_data) # Assuming 0 is an unlikely ID
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # More tests will go here for Create (if not fully covered by helper), Delete, List
 
