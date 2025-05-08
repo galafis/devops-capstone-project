@@ -161,5 +161,33 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, b"") # Ensure body is empty
 
-    # More tests will go here for Create (if not fully covered by helper), List
+    def test_list_all_accounts(self):
+        """It should List all Accounts"""
+        # Create some accounts
+        num_accounts_to_create = 3
+        created_accounts = self._create_accounts(num_accounts_to_create)
+
+        # Send GET request to list all accounts
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        retrieved_accounts = response.get_json()
+        self.assertIsInstance(retrieved_accounts, list)
+        self.assertEqual(len(retrieved_accounts), num_accounts_to_create)
+
+        # Verify that all created accounts are in the list (order might not be guaranteed)
+        retrieved_ids = {acc["id"] for acc in retrieved_accounts}
+        created_ids = {acc["id"] for acc in created_accounts}
+        self.assertEqual(retrieved_ids, created_ids)
+
+    def test_list_accounts_empty(self):
+        """It should return an empty list if no Accounts exist"""
+        # Ensure no accounts are present (init_db in setUp should handle this)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        retrieved_accounts = response.get_json()
+        self.assertIsInstance(retrieved_accounts, list)
+        self.assertEqual(len(retrieved_accounts), 0)
+
+    # More tests will go here for Create (if not fully covered by helper)
 
