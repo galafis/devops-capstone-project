@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-capstone-project-deployment
+  labels:
+    app: devops-capstone-project
+spec:
+  replicas: 2 # Start with 2 replicas, can be adjusted
+  selector:
+    matchLabels:
+      app: devops-capstone-project
+  template:
+    metadata:
+      labels:
+        app: devops-capstone-project
+    spec:
+      containers:
+      - name: devops-capstone-project-container
+        image: galafis/devops-capstone-project:latest # IMPORTANT: User needs to build and push this image to Docker Hub
+        ports:
+        - containerPort: 8000
+        env:
+        - name: FLASK_APP
+          value: "service:app"
+        - name: FLASK_RUN_HOST
+          value: "0.0.0.0"
+        - name: FLASK_RUN_PORT
+          value: "8000"
+        # Add readiness and liveness probes for better health checking
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
