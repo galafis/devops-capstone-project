@@ -35,6 +35,20 @@ def index():
     )
 
 ######################################################################
+# LIST ALL ACCOUNTS (GET /accounts)
+######################################################################
+@app.route("/accounts", methods=["GET"])
+def list_accounts():
+    """Returns all of the Accounts"""
+    app.logger.info("Request to list all accounts")
+    
+    # Get all accounts from the in-memory store
+    accounts_list = list(IN_MEMORY_ACCOUNTS.values())
+    
+    app.logger.info(f"Returning {len(accounts_list)} accounts")
+    return make_response(jsonify(accounts_list), status.HTTP_200_OK)
+
+######################################################################
 # CREATE A NEW ACCOUNT (POST /accounts)
 ######################################################################
 @app.route("/accounts", methods=["POST"])
@@ -50,7 +64,6 @@ def create_accounts():
     IN_MEMORY_ACCOUNTS[ACCOUNT_ID_COUNTER] = new_account
     ACCOUNT_ID_COUNTER += 1
     
-    # Corrected f-string: using single quotes for dictionary key access
     app.logger.info(f"Account with ID [{new_account['id']}] created.")
     location_url = url_for("get_account_by_id", account_id=new_account['id'], _external=True)
     return make_response(
@@ -91,7 +104,6 @@ def update_accounts(account_id):
     updated_data["id"] = account_id
     IN_MEMORY_ACCOUNTS[account_id] = updated_data
     
-    # Corrected f-string: using single quotes for dictionary key access
     app.logger.info(f"Account with ID [{updated_data['id']}] updated.")
     return make_response(jsonify(updated_data), status.HTTP_200_OK)
 
@@ -105,8 +117,6 @@ def delete_accounts(account_id):
     if account_id in IN_MEMORY_ACCOUNTS:
         del IN_MEMORY_ACCOUNTS[account_id]
         app.logger.info(f"Account with ID [{account_id}] deleted.")
-    # Per HTTP guidelines, DELETE is idempotent. 
-    # So, if the account doesn_t exist, we still return 204.
     return make_response("", status.HTTP_204_NO_CONTENT)
 
 
