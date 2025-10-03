@@ -1,6 +1,12 @@
+> Este é um repositório bilíngue. Role para baixo para ver a versão em inglês. 🇺🇸
+
 # Projeto Capstone de DevOps
 
 Este repositório é dedicado ao projeto capstone do curso de DevOps, focado no desenvolvimento e implementação de um microsserviço de contas de cliente. O projeto abrange diversas etapas do ciclo de vida de desenvolvimento de software, incluindo planejamento ágil, desenvolvimento orientado a testes (TDD), conteinerização com Docker e orquestração com Kubernetes.
+
+## 🖼️ Imagem Hero
+
+![DevOps Capstone Project Hero Image](https://files.manuscdn.com/user_upload_by_module/session_file/310419663028677753/ZvCkNVSyDCerjxbr.png)
 
 ## Visão Geral do Projeto
 
@@ -112,7 +118,7 @@ Se você ainda não o fez, envie sua imagem Docker para um registro acessível p
 # Faça login no seu registro (ex: Docker Hub)
 # docker login
 
-# Envie a imagem (substitua 'seu_usuario_dockerhub' se aplicável)
+# Envie a imagem (substitua \'seu_usuario_dockerhub\' se aplicável)
 docker push galafis/devops-capstone-project:latest
 ```
 
@@ -143,7 +149,11 @@ Use o `EXTERNAL-IP` e a porta exposta pelo serviço (porta 80, conforme `service
 
 ## Contribuições
 
-Este projeto foi desenvolvido como parte de um programa de formação. Pull requests e sugestões são bem-vindos para melhorias e aprendizado contínuo.
+Este projeto foi desenvolvido por Gabriel Demetrios Lafis como parte de um programa de formação. Pull requests e sugestões são bem-vindos para melhorias e aprendizado contínuo.
 
 Este projeto visa demonstrar competências em desenvolvimento full-stack, com ênfase em práticas de DevOps, seguindo as diretrizes do programa de formação IBM Full-Stack JavaScript Developer.
+
+## Licença
+
+Este projeto está licenciado sob a Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
 
