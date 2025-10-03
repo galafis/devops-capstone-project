@@ -191,3 +191,17 @@ class TestAccountService(TestCase):
 
     # More tests will go here for Create (if not fully covered by helper)
 
+
+
+    def test_create_account_bad_request(self):
+        """It should not Create an Account with bad data"""
+        response = self.client.post(BASE_URL, json={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_account_bad_request(self):
+        """It should not Update an Account with bad data"""
+        created_account = self._create_accounts(1)[0]
+        account_id = created_account["id"]
+        response = self.client.put(f"{BASE_URL}/{account_id}", json={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+

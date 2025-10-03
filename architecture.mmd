@@ -1,0 +1,11 @@
+graph TD
+    A[Cliente] -->|Requisição HTTP| B(API Gateway/Load Balancer)
+    B --> C[Microsserviço de Contas - Flask App]
+    C -- GET /accounts --> D[In-Memory Database]
+    C -- POST /accounts --> D
+    C -- GET /accounts/{id} --> D
+    C -- PUT /accounts/{id} --> D
+    C -- DELETE /accounts/{id} --> D
+    D --> C
+    C -->|Resposta HTTP| B
+    B --> A
